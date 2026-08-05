@@ -1,0 +1,81 @@
+[
+  {
+    "ContainingType": "ProgramService.Controllers.CyclesController",
+    "Method": "GetAll",
+    "RelativePath": "api/cycles",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ProgramService.Controllers.CyclesController",
+    "Method": "Create",
+    "RelativePath": "api/cycles",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "cycle",
+        "Type": "ProgramService.Models.HafCycle",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ProgramService.Controllers.CyclesController",
+    "Method": "Get",
+    "RelativePath": "api/cycles/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ProgramService.Controllers.CyclesController",
+    "Method": "Update",
+    "RelativePath": "api/cycles/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "payload",
+        "Type": "ProgramService.Models.HafCycle",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ProgramService.Controllers.CyclesController",
+    "Method": "Delete",
+    "RelativePath": "api/cycles/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

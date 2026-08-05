@@ -1,0 +1,12 @@
+[
+  {
+    "ContainingType": "ReportingService.Controllers.DashboardController",
+    "Method": "Overview",
+    "RelativePath": "api/dashboard/overview",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]

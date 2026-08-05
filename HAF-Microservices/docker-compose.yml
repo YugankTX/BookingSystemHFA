@@ -1,0 +1,208 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: services/identity-service/Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=identity_db;Username=postgres;Password=postgres
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  program-service:
+    build:
+      context: .
+      dockerfile: services/program-service/Dockerfile
+    ports:
+      - "5002:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=program_db;Username=postgres;Password=postgres
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  club-activity-service:
+    build:
+      context: .
+      dockerfile: services/club-activity-service/Dockerfile
+    ports:
+      - "5003:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=club_db;Username=postgres;Password=postgres
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  family-service:
+    build:
+      context: .
+      dockerfile: services/family-service/Dockerfile
+    ports:
+      - "5004:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=family_db;Username=postgres;Password=postgres
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: .
+      dockerfile: services/booking-service/Dockerfile
+    ports:
+      - "5005:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=booking_db;Username=postgres;Password=postgres
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - RabbitMQ__Host=rabbitmq
+      - Services__FamilyService=http://family-service:8080
+      - Services__ClubActivityService=http://club-activity-service:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  attendance-service:
+    build:
+      context: .
+      dockerfile: services/attendance-service/Dockerfile
+    ports:
+      - "5006:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=attendance_db;Username=postgres;Password=postgres
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  eligibility-service:
+    build:
+      context: .
+      dockerfile: services/eligibility-service/Dockerfile
+    ports:
+      - "5007:8080"
+    environment:
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - RabbitMQ__Host=rabbitmq
+      - Services__FamilyService=http://family-service:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  compliance-service:
+    build:
+      context: .
+      dockerfile: services/compliance-service/Dockerfile
+    ports:
+      - "5008:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=compliance_db;Username=postgres;Password=postgres
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  reporting-service:
+    build:
+      context: .
+      dockerfile: services/reporting-service/Dockerfile
+    ports:
+      - "5009:8080"
+    environment:
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - Services__IdentityService=http://identity-service:8080
+      - Services__ProgramService=http://program-service:8080
+      - Services__ClubActivityService=http://club-activity-service:8080
+      - Services__FamilyService=http://family-service:8080
+      - Services__BookingService=http://booking-service:8080
+      - Services__ComplianceService=http://compliance-service:8080
+    depends_on:
+      - identity-service
+      - program-service
+      - club-activity-service
+      - family-service
+      - booking-service
+      - compliance-service
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    ports:
+      - "5010:8080"
+    environment:
+      - Jwt__Secret=HAF-Microservices-JWT-Secret-Key-2026-Bradford-Council-Secure
+      - Jwt__Issuer=haf-identity-service
+      - Jwt__Audience=haf-microservices
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  pgdata:

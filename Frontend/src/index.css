@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-900 antialiased;
+  }
+
+  /* WCAG 2.2 AA — visible focus ring on all interactive elements */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Skip link for keyboard/screen-reader accessibility */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999]
+           focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg
+           focus:text-sm focus:font-semibold focus:shadow-lg;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+           transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
+           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] shadow-sm;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 active:scale-[0.98] shadow-sm;
+  }
+  .btn-danger {
+    @apply btn bg-error-600 text-white hover:bg-error-700 active:scale-[0.98] shadow-sm;
+  }
+  .btn-ghost {
+    @apply btn text-slate-600 hover:bg-slate-100;
+  }
+  .btn-success {
+    @apply btn bg-accent-600 text-white hover:bg-accent-700 active:scale-[0.98] shadow-sm;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900
+           placeholder-slate-400 shadow-sm
+           focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none
+           transition-colors duration-150;
+  }
+  .select {
+    @apply input appearance-none cursor-pointer;
+  }
+  .label {
+    @apply block text-sm font-medium text-slate-700 mb-1.5;
+  }
+  .label-required::after {
+    content: ' *';
+    @apply text-error-500;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl border border-slate-200 shadow-card;
+  }
+  .card-hover {
+    @apply card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-pointer;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .badge-success { @apply badge bg-accent-100 text-accent-700 ring-1 ring-accent-200; }
+  .badge-warning { @apply badge bg-warning-100 text-warning-700 ring-1 ring-warning-200; }
+  .badge-error   { @apply badge bg-error-100 text-error-700 ring-1 ring-error-200; }
+  .badge-info    { @apply badge bg-primary-100 text-primary-700 ring-1 ring-primary-200; }
+  .badge-neutral { @apply badge bg-slate-100 text-slate-600 ring-1 ring-slate-200; }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
+           transition-all duration-150 text-slate-400 hover:text-white hover:bg-slate-800/60;
+  }
+  .nav-item-active {
+    @apply text-white bg-primary-600 shadow-sm;
+  }
+
+  /* Section divider */
+  .divider {
+    @apply border-t border-slate-200 my-4;
+  }
+
+  /* Table */
+  .table-container {
+    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }

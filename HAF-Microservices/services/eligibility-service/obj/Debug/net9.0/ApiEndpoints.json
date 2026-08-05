@@ -1,0 +1,39 @@
+[
+  {
+    "ContainingType": "EligibilityService.Controllers.EligibilityController",
+    "Method": "Check",
+    "RelativePath": "api/fsm/{childId}/check",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "childId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "EligibilityService.Controllers.EligibilityController",
+    "Method": "SetEligible",
+    "RelativePath": "api/fsm/{childId}/eligible",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "childId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "req",
+        "Type": "EligibilityService.Controllers.SetEligibleRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

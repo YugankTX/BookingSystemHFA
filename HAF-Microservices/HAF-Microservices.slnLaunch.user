@@ -1,0 +1,62 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "services\\attendance-service\\AttendanceService.csproj",
+        "Action": "Start",
+        "DebugTarget": "AttendanceService"
+      },
+      {
+        "Path": "services\\booking-service\\BookingService.csproj",
+        "Action": "Start",
+        "DebugTarget": "BookingService"
+      },
+      {
+        "Path": "services\\club-activity-service\\ClubActivityService.csproj",
+        "Action": "Start",
+        "DebugTarget": "ClubActivityService"
+      },
+      {
+        "Path": "services\\compliance-service\\ComplianceService.csproj",
+        "Action": "Start",
+        "DebugTarget": "ComplianceService"
+      },
+      {
+        "Path": "services\\eligibility-service\\EligibilityService.csproj",
+        "Action": "Start",
+        "DebugTarget": "EligibilityService"
+      },
+      {
+        "Path": "services\\family-service\\FamilyService.csproj",
+        "Action": "Start",
+        "DebugTarget": "FamilyService"
+      },
+      {
+        "Path": "services\\identity-service\\IdentityService.csproj",
+        "Action": "Start",
+        "DebugTarget": "IdentityService"
+      },
+      {
+        "Path": "services\\notification-service\\NotificationService.csproj",
+        "Action": "Start",
+        "DebugTarget": "NotificationService"
+      },
+      {
+        "Path": "services\\program-service\\ProgramService.csproj",
+        "Action": "Start",
+        "DebugTarget": "ProgramService"
+      },
+      {
+        "Path": "services\\reporting-service\\ReportingService.csproj",
+        "Action": "Start",
+        "DebugTarget": "ReportingService"
+      },
+      {
+        "Path": "shared\\HAF.Shared\\HAF.Shared.csproj",
+        "Action": "Start",
+        "DebugTarget": "HAF.Shared"
+      }
+    ]
+  }
+]
