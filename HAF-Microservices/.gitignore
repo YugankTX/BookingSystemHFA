@@ -1,0 +1,36 @@
+# Visual Studio local metadata (machine-specific, never commit)
+.vs/
+
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Publish output
+publish/
+**/Properties/PublishProfiles/
+
+# Logs
+*.log
+FilecontentIndex/
+# OS
+
+.DS_Store
+Thumbs.db
+
+
+/DesignTimeBuild
+/v17

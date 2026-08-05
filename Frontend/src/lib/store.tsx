@@ -616,15 +616,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ── Links → Bookings (booking-service) ──────────────────────────────────
 
-  const createLink: DataStore['createLink'] = useCallback((data) => {
-    if (!data.activityId || !data.childId) return Promise.resolve({ ok: false, status: 400, data: null });
-    return svcReq('booking', '/api/bookings', {
+  const createLink: DataStore['createLink'] = useCallback(async (data) => {
+    if (!data.activityId || !data.childId) return { ok: false, status: 400, data: null };
+
+    // Step 1: acquire a seat lock
+    const lockRes = await svcReq('booking', '/api/bookings/lock', {
       method: 'POST',
       body: JSON.stringify({ childId: data.childId, activityId: data.activityId }),
-    }).then(r => {
-      if (r.ok) { loadAll(); addLog('CREATE_LINK', 'child_club_link', '', 'Linked child to activity'); }
-      return r;
     });
+    if (!lockRes.ok) return lockRes;
+
+    const lockToken: string = (lockRes.data as any)?.lockToken;
+
+    // Step 2: create the booking using the lock token
+    const r = await svcReq('booking', '/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify({ childId: data.childId, activityId: data.activityId, lockToken }),
+    });
+    if (r.ok) { loadAll(); addLog('CREATE_LINK', 'child_club_link', '', 'Linked child to activity'); }
+    return r;
   }, [loadAll, addLog]);
 
   const updateLink: DataStore['updateLink'] = useCallback((id, data) => {

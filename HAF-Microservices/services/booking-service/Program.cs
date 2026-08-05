@@ -1,6 +1,7 @@
 using System.Text;
 using BookingService.Consumers;
 using BookingService.Data;
+using BookingService.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddHostedService<SeatLockCleanupService>();
 
 builder.Services.AddMassTransit(x =>
 {
@@ -89,6 +91,20 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
     db.Database.EnsureCreated();
+
+    // Create SeatLocks table if it doesn't exist (EnsureCreated won't add new tables to an existing DB)
+    db.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "SeatLocks" (
+            "Id"         text NOT NULL PRIMARY KEY,
+            "LockToken"  text NOT NULL,
+            "ActivityId" text NOT NULL,
+            "ChildId"    text NOT NULL,
+            "AcquiredAt" timestamptz NOT NULL,
+            "ExpiresAt"  timestamptz NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_SeatLocks_LockToken"             ON "SeatLocks" ("LockToken");
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_SeatLocks_ActivityId_ChildId"    ON "SeatLocks" ("ActivityId", "ChildId");
+        """);
 
     var existingBookingIds = db.Bookings.Select(b => b.Id).ToHashSet();
 
