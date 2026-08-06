@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth';
 import { PageHeader, StatCard, Table, Td, StatusBadge, RoleBadge, EmptyState } from '../../components/ui';
 import { Modal, ConfirmDialog } from '../../components/Modal';
 import { exportToCsv, formatDate, formatDateTime } from '../../lib/utils';
+import { svcReq } from '../../lib/api';
 import type { User, Role } from '../../lib/types';
 import { Users, Calendar, Upload, FileText, Building2, ScrollText, Shield, Plus, Edit2, Trash2, Download, UserPlus, Power, Eye, EyeOff } from 'lucide-react';
 
@@ -236,36 +237,114 @@ export function AdminBulkUploads() {
   const [uploadType, setUploadType] = useState<'schools' | 'clubs' | 'activities' | 'children'>('schools');
   const [csvText, setCsvText] = useState('');
   const [result, setResult] = useState('');
+  const [uploading, setUploading] = useState(false);
 
-  const handleUpload = () => {
-    if (!csvText.trim()) { setResult('Please paste CSV data first'); return; }
-    const lines = csvText.trim().split('\n');
+  const parseCsv = (text: string) => {
+    const lines = text.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
-    const rows = lines.slice(1).map(line => {
+    return lines.slice(1).map(line => {
       const vals = line.split(',').map(v => v.trim());
       const obj: Record<string, string> = {};
-      headers.forEach((h, i) => obj[h] = vals[i] ?? '');
+      headers.forEach((h, i) => { obj[h] = vals[i] ?? ''; });
       return obj;
     });
+  };
 
-    if (uploadType === 'schools') {
-      store.bulkUploadSchools(rows.map(r => ({ id: `s-${Date.now()}-${Math.random()}`, name: r.name ?? '', urn: r.urn ?? '', address: r.address ?? '' })));
-    } else if (uploadType === 'clubs') {
-      store.bulkUploadClubs(rows.map(r => ({ id: `cl-${Date.now()}-${Math.random()}`, userId: '', name: r.name ?? '', description: r.description ?? '', contactEmail: r.contactEmail ?? '', address: r.address ?? '', phone: r.phone ?? '', isVisible: true, logoUrl: '', createdAt: new Date().toISOString() })));
-    } else if (uploadType === 'activities') {
-      store.bulkUploadActivities(rows.map(r => ({ id: `a-${Date.now()}-${Math.random()}`, clubId: r.clubId ?? '', cycleId: r.cycleId ?? '', title: r.title ?? '', description: r.description ?? '', startDate: r.startDate ?? '', endDate: r.endDate ?? '', startTime: r.startTime ?? '', endTime: r.endTime ?? '', capacity: parseInt(r.capacity ?? '0') || 0, location: r.location ?? '', ageMin: parseInt(r.ageMin ?? '0') || 0, ageMax: parseInt(r.ageMax ?? '0') || 0, createdAt: new Date().toISOString() })));
-    } else if (uploadType === 'children') {
-      store.bulkUploadChildren(rows.map(r => ({ id: `ch-${Date.now()}-${Math.random()}`, parentId: r.parentId ?? '', fullName: r.fullName ?? '', dateOfBirth: r.dateOfBirth ?? '', schoolId: r.schoolId || null, fsmEligible: r.fsmEligible === 'true', fsmVerifiedAt: null, fsmReference: null, createdAt: new Date().toISOString() })));
+  const handleUpload = async () => {
+    if (!csvText.trim()) { setResult('Please paste CSV data first'); return; }
+    const rows = parseCsv(csvText);
+    setUploading(true);
+    setResult('');
+
+    try {
+      if (uploadType === 'schools') {
+        // Schools are reference data — keep local only
+        store.bulkUploadSchools(rows.map(r => ({
+          id: `s-${Date.now()}-${Math.random()}`, name: r.name ?? '', urn: r.urn ?? '', address: r.address ?? '',
+        })));
+        setResult(`Uploaded ${rows.length} school(s) to local reference data.`);
+
+      } else if (uploadType === 'clubs') {
+        const payload = rows.map(r => ({
+          name: r.name ?? '', description: r.description ?? '',
+          contactEmail: r.contactEmail ?? '', address: r.address ?? '',
+          isVisible: true,
+        }));
+        const r2 = await svcReq<{ created: number }>('club', '/api/clubs/batch', {
+          method: 'POST', body: JSON.stringify(payload),
+        });
+        if (r2.ok) {
+          store.loadAll();
+          setResult(`Successfully persisted ${(r2.data as any)?.created ?? rows.length} club(s) to the database.`);
+        } else {
+          setResult(`Upload failed: ${(r2.data as any)?.message ?? 'Unknown error'}`);
+        }
+
+      } else if (uploadType === 'activities') {
+        const payload = rows.map(r => ({
+          clubProfileId: r.clubId ?? '',
+          cycleId: r.cycleId ?? '',
+          title: r.title ?? '',
+          description: r.description ?? '',
+          startDateTime: r.startDate && r.startTime ? `${r.startDate}T${r.startTime}:00Z` : new Date().toISOString(),
+          endDateTime:   r.endDate   && r.endTime   ? `${r.endDate}T${r.endTime}:00Z`     : new Date().toISOString(),
+          capacity: parseInt(r.capacity ?? '0') || 0,
+          isActive: true,
+        }));
+        const r2 = await svcReq<{ created: number }>('club', '/api/activities/batch', {
+          method: 'POST', body: JSON.stringify(payload),
+        });
+        if (r2.ok) {
+          store.loadAll();
+          setResult(`Successfully persisted ${(r2.data as any)?.created ?? rows.length} activity(s) to the database.`);
+        } else {
+          setResult(`Upload failed: ${(r2.data as any)?.message ?? 'Unknown error'}`);
+        }
+
+      } else if (uploadType === 'children') {
+        // 1. Persist children to family-service
+        const payload = rows.map(r => ({
+          fullName: r.fullName ?? '',
+          dateOfBirth: r.dateOfBirth || new Date().toISOString(),
+          upn: r.upn || r.UPN || null,
+          fsmEligible: r.fsmEligible === 'true',
+          parentGuardianId: r.parentId ?? '',
+        }));
+        const r2 = await svcReq<{ created: number }>('family', '/api/children/batch', {
+          method: 'POST', body: JSON.stringify(payload),
+        });
+
+        // 2. Load FSM dataset (UPNs of eligible children) into eligibility-service
+        const eligibleUpns = rows
+          .filter(r => r.fsmEligible === 'true' && (r.upn || r.UPN))
+          .map(r => r.upn || r.UPN);
+        if (eligibleUpns.length > 0) {
+          await svcReq('eligibility', '/api/fsm/dataset', {
+            method: 'POST', body: JSON.stringify({ upns: eligibleUpns }),
+          });
+        }
+
+        if (r2.ok) {
+          store.loadAll();
+          const created = (r2.data as any)?.created ?? rows.length;
+          setResult(`Persisted ${created} child record(s). FSM dataset loaded with ${eligibleUpns.length} eligible UPN(s).`);
+        } else {
+          setResult(`Upload failed: ${(r2.data as any)?.message ?? 'Unknown error'}`);
+        }
+      }
+    } catch (err) {
+      setResult(`Error: ${err instanceof Error ? err.message : 'Request failed'}`);
+    } finally {
+      setUploading(false);
+      setCsvText('');
     }
-    setResult(`Successfully uploaded ${rows.length} ${uploadType} records.`);
-    setCsvText('');
   };
 
   const templates: Record<string, string> = {
-    schools: 'name,urn,address\nRiverside Primary,100005,1 River Lane\nNewfield Academy,100006,2 Newfield Rd',
-    clubs: 'name,description,contactEmail,address,phone\nSports Club,Football training,info@sports.co.uk,10 Sports Rd,020 7000 0100',
-    activities: 'clubId,cycleId,title,startDate,endDate,startTime,endTime,capacity,location,ageMin,ageMax\ncl1,c1,Tennis,2025-04-07,2025-04-11,09:00,12:00,20,Court 1,6,12',
-    children: 'parentId,fullName,dateOfBirth,schoolId,fsmEligible\np1,New Child,2016-05-10,s1,true',
+    schools:    'name,urn,address\nRiverside Primary,100005,1 River Lane\nNewfield Academy,100006,2 Newfield Rd',
+    clubs:      'name,description,contactEmail,address\nSports Club,Football training,info@sports.co.uk,10 Sports Rd',
+    activities: 'clubId,cycleId,title,startDate,endDate,startTime,endTime,capacity\ncl1,c1,Tennis,2025-04-07,2025-04-11,09:00,12:00,20',
+    children:   'parentId,fullName,dateOfBirth,upn,fsmEligible\np1,New Child,2016-05-10,A123456789,true',
   };
 
   return (
@@ -281,15 +360,26 @@ export function AdminBulkUploads() {
             </button>
           ))}
         </div>
+        {uploadType !== 'schools' && (
+          <div className="mb-3 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-700">
+            Data will be persisted to the database.{uploadType === 'children' && ' Eligible UPNs will also be loaded into the FSM eligibility service.'}
+          </div>
+        )}
         <div className="mb-3">
           <button onClick={() => setCsvText(templates[uploadType])} className="text-xs text-primary-600 hover:text-primary-700 font-medium">
             Load sample template
           </button>
         </div>
         <textarea className="input font-mono text-xs h-48 resize-y" placeholder="Paste CSV data here (headers on first line)..." value={csvText} onChange={e => setCsvText(e.target.value)} />
-        {result && <div className="mt-3 rounded-lg bg-accent-50 border border-accent-200 px-3 py-2 text-sm text-accent-700">{result}</div>}
+        {result && (
+          <div className={`mt-3 rounded-lg border px-3 py-2 text-sm ${result.startsWith('Error') || result.startsWith('Upload failed') ? 'bg-red-50 border-red-200 text-red-700' : 'bg-accent-50 border-accent-200 text-accent-700'}`}>
+            {result}
+          </div>
+        )}
         <div className="flex justify-end mt-4">
-          <button onClick={handleUpload} className="btn-primary"><Upload size={16} /> Upload Data</button>
+          <button onClick={handleUpload} disabled={uploading} className="btn-primary">
+            <Upload size={16} /> {uploading ? 'Uploading…' : 'Upload Data'}
+          </button>
         </div>
       </div>
     </div>

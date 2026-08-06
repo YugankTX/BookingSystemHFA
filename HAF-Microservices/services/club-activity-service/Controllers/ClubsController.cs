@@ -36,6 +36,22 @@ public class ClubsController : ControllerBase
         return Created($"/api/clubs/{club.Id}", club);
     }
 
+    [HttpPost("batch")]
+    public async Task<IActionResult> Batch([FromBody] List<ClubProfile> items)
+    {
+        if (items is null || items.Count == 0)
+            return BadRequest(new { message = "No items provided." });
+
+        foreach (var club in items)
+        {
+            club.Id = string.IsNullOrWhiteSpace(club.Id) ? Guid.NewGuid().ToString("N") : club.Id;
+            club.CreatedAt = DateTimeOffset.UtcNow;
+            _db.Clubs.Add(club);
+        }
+        await _db.SaveChangesAsync();
+        return Ok(new { created = items.Count });
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] ClubProfile payload)
     {

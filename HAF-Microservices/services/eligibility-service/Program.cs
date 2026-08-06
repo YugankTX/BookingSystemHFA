@@ -1,4 +1,5 @@
 using System.Text;
+using EligibilityService.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -27,6 +28,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<FsmDatasetService>();
 
 builder.Services.AddMassTransit(x =>
 {

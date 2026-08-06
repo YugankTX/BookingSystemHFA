@@ -105,7 +105,7 @@ public class BookingsController : ControllerBase
         // ── Capacity safety check (confirmed bookings must be under cap) ────
         // The lock already reserved a slot, so we check confirmed count only.
         var confirmedCount = await _db.Bookings
-            .CountAsync(b => b.ActivityId == req.ActivityId && b.Status != "Cancelled");
+            .CountAsync(b => b.ActivityId == req.ActivityId && b.Status == "Confirmed");
 
         if (confirmedCount >= capacity)
             return Conflict(new { message = $"Activity is full. Capacity: {capacity}." });

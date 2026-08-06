@@ -1,21 +1,30 @@
 using HAF.Shared.Events;
 using MassTransit;
+using NotificationService.Data;
+using NotificationService.Models;
 
 namespace NotificationService.Consumers;
 
 public class BookingConfirmedConsumer : IConsumer<BookingConfirmed>
 {
-    private readonly ILogger<BookingConfirmedConsumer> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public BookingConfirmedConsumer(ILogger<BookingConfirmedConsumer> logger) => _logger = logger;
+    public BookingConfirmedConsumer(IServiceScopeFactory scopeFactory) => _scopeFactory = scopeFactory;
 
-    public Task Consume(ConsumeContext<BookingConfirmed> context)
+    public async Task Consume(ConsumeContext<BookingConfirmed> context)
     {
         var msg = context.Message;
-        _logger.LogInformation(
-            "[EMAIL] To: {ChildName} | Subject: Booking Confirmed | " +
-            "Reference: {Ref} | Activity: {Activity} | BookedAt: {BookedAt}",
-            msg.ChildName, msg.BookingReference, msg.ActivityTitle, msg.BookedAt);
-        return Task.CompletedTask;
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+
+        db.Notifications.Add(new Notification
+        {
+            Type       = "booking_confirmed",
+            Title      = "Booking Confirmed",
+            Body       = $"Booking for {msg.ChildName} at \"{msg.ActivityTitle}\" has been confirmed. Reference: {msg.BookingReference}.",
+            TargetRole = "parent",
+            RelatedId  = msg.BookingId,
+        });
+        await db.SaveChangesAsync();
     }
 }

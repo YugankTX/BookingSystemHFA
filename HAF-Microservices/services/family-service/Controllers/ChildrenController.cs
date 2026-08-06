@@ -52,6 +52,42 @@ public class ChildrenController : ControllerBase
         return Created($"/api/children/{child.Id}", child);
     }
 
+    [HttpPost("batch")]
+    public async Task<IActionResult> Batch([FromBody] List<ChildBatchItem> items)
+    {
+        if (items is null || items.Count == 0)
+            return BadRequest(new { message = "No items provided." });
+
+        var created = new List<Child>();
+        var skipped = new List<string>();
+
+        foreach (var item in items)
+        {
+            if (string.IsNullOrWhiteSpace(item.FullName) || string.IsNullOrWhiteSpace(item.ParentGuardianId))
+            { skipped.Add(item.FullName ?? "(no name)"); continue; }
+
+            if (!await _db.Parents.AnyAsync(p => p.Id == item.ParentGuardianId))
+            { skipped.Add(item.FullName); continue; }
+
+            var child = new Child
+            {
+                Id               = Guid.NewGuid().ToString("N"),
+                FullName         = item.FullName.Trim(),
+                DateOfBirth      = item.DateOfBirth,
+                UPN              = item.Upn,
+                FsmEligible      = item.FsmEligible,
+                FsmVerified      = false,
+                ParentGuardianId = item.ParentGuardianId,
+                CreatedAt        = DateTimeOffset.UtcNow,
+            };
+            _db.Children.Add(child);
+            created.Add(child);
+        }
+
+        if (created.Count > 0) await _db.SaveChangesAsync();
+        return Ok(new { created = created.Count, skipped = skipped.Count, skippedNames = skipped });
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] ChildRequest req)
     {
@@ -90,4 +126,5 @@ public class ChildrenController : ControllerBase
 }
 
 public record ChildRequest(string? FullName, DateTimeOffset DateOfBirth, string? Upn, bool FsmEligible, string? ParentGuardianId);
+public record ChildBatchItem(string? FullName, DateTimeOffset DateOfBirth, string? Upn, bool FsmEligible, string? ParentGuardianId);
 public record FsmRequest(bool FsmEligible, bool FsmVerified);

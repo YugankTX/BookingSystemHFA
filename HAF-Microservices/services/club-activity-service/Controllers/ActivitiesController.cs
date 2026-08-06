@@ -67,4 +67,20 @@ public class ActivitiesController : ControllerBase
         await _db.SaveChangesAsync();
         return NoContent();
     }
+
+    [HttpPost("batch")]
+    public async Task<IActionResult> Batch([FromBody] List<Activity> items)
+    {
+        if (items is null || items.Count == 0)
+            return BadRequest(new { message = "No items provided." });
+
+        foreach (var activity in items)
+        {
+            activity.Id = string.IsNullOrWhiteSpace(activity.Id) ? Guid.NewGuid().ToString("N") : activity.Id;
+            activity.CreatedAt = DateTimeOffset.UtcNow;
+            _db.Activities.Add(activity);
+        }
+        await _db.SaveChangesAsync();
+        return Ok(new { created = items.Count });
+    }
 }

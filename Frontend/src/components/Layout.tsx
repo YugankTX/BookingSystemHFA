@@ -10,6 +10,7 @@ import {
   Baby, AlertCircle, Eye, LogOut, Menu, X,
   Clock, CalendarCheck,
 } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 
 interface NavItem {
   label: string;
@@ -148,6 +149,9 @@ export function Layout() {
             <p className="text-sm font-semibold text-white truncate">{user.fullName}</p>
             <p className="text-xs text-slate-500 truncate">{user.email}</p>
           </div>
+          <div className="[&_button]:text-slate-400 [&_button:hover]:text-white [&_button:hover]:bg-slate-800">
+            <NotificationBell />
+          </div>
           <button
             onClick={handleLogout}
             title="Sign out"
@@ -210,6 +214,7 @@ export function Layout() {
             </div>
             <span className="font-bold text-slate-900 text-sm">Bradford HAF</span>
           </div>
+          <NotificationBell />
           <div className="w-8 h-8 rounded-full bg-primary-700 flex items-center justify-center text-xs font-bold text-white">
             {initials}
           </div>

@@ -4,7 +4,11 @@
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Yugank\\\\Desktop\\\\Booking System\" -Recurse -Depth 3 | Where-Object {$_.PSIsContainer} | Select-Object FullName | Format-Table -AutoSize)",
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Yugank\\\\Desktop\\\\Booking System\\\\Frontend\\\\src\" -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object Name | Where-Object {$_.Name -match \"\\\\.\\(tsx|ts\\)$\"})",
       "PowerShell(Get-Process *)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(git check-ignore *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet restore *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

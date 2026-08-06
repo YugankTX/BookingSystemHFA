@@ -1,17 +1,18 @@
 export type Service =
   | 'identity' | 'program' | 'club' | 'family'
-  | 'booking' | 'attendance' | 'eligibility' | 'compliance' | 'reporting';
+  | 'booking' | 'attendance' | 'eligibility' | 'compliance' | 'reporting' | 'notification';
 
 const URLS: Record<Service, string> = {
-  identity: ((import.meta.env.VITE_IDENTITY_URL as string | undefined) ?? 'http://localhost:5001').replace(/\/$/, ''),
-  program: ((import.meta.env.VITE_PROGRAM_URL as string | undefined) ?? 'http://localhost:5002').replace(/\/$/, ''),
-  club: ((import.meta.env.VITE_CLUB_URL as string | undefined) ?? 'http://localhost:5003').replace(/\/$/, ''),
-  family: ((import.meta.env.VITE_FAMILY_URL as string | undefined) ?? 'http://localhost:5004').replace(/\/$/, ''),
-  booking: ((import.meta.env.VITE_BOOKING_URL as string | undefined) ?? 'http://localhost:5005').replace(/\/$/, ''),
-  attendance: ((import.meta.env.VITE_ATTENDANCE_URL as string | undefined) ?? 'http://localhost:5006').replace(/\/$/, ''),
-  eligibility: ((import.meta.env.VITE_ELIGIBILITY_URL as string | undefined) ?? 'http://localhost:5007').replace(/\/$/, ''),
-  compliance: ((import.meta.env.VITE_COMPLIANCE_URL as string | undefined) ?? 'http://localhost:5008').replace(/\/$/, ''),
-  reporting: ((import.meta.env.VITE_REPORTING_URL as string | undefined) ?? 'http://localhost:5009').replace(/\/$/, ''),
+  identity:     ((import.meta.env.VITE_IDENTITY_URL     as string | undefined) ?? 'http://localhost:5001').replace(/\/$/, ''),
+  program:      ((import.meta.env.VITE_PROGRAM_URL      as string | undefined) ?? 'http://localhost:5002').replace(/\/$/, ''),
+  club:         ((import.meta.env.VITE_CLUB_URL         as string | undefined) ?? 'http://localhost:5003').replace(/\/$/, ''),
+  family:       ((import.meta.env.VITE_FAMILY_URL       as string | undefined) ?? 'http://localhost:5004').replace(/\/$/, ''),
+  booking:      ((import.meta.env.VITE_BOOKING_URL      as string | undefined) ?? 'http://localhost:5005').replace(/\/$/, ''),
+  attendance:   ((import.meta.env.VITE_ATTENDANCE_URL   as string | undefined) ?? 'http://localhost:5006').replace(/\/$/, ''),
+  eligibility:  ((import.meta.env.VITE_ELIGIBILITY_URL  as string | undefined) ?? 'http://localhost:5007').replace(/\/$/, ''),
+  compliance:   ((import.meta.env.VITE_COMPLIANCE_URL   as string | undefined) ?? 'http://localhost:5008').replace(/\/$/, ''),
+  reporting:    ((import.meta.env.VITE_REPORTING_URL    as string | undefined) ?? 'http://localhost:5009').replace(/\/$/, ''),
+  notification: ((import.meta.env.VITE_NOTIFICATION_URL as string | undefined) ?? 'http://localhost:5010').replace(/\/$/, ''),
 };
 
 // auth.tsx uses apiBaseUrl directly — keep pointing to identity service
